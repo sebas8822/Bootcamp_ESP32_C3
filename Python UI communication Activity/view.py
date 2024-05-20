@@ -86,6 +86,35 @@ class MQTTView:
         )
         self.topic_log_text.pack(pady=5)
 
+        # MQTT and Schedule toggles
+        mqtt_frame = tk.Frame(right_frame)
+        mqtt_frame.pack(pady=10)
+
+        mqtt_label = tk.Label(mqtt_frame, text="MQTT:")
+        mqtt_label.pack(side=tk.LEFT, padx=5)
+
+        self.mqtt_toggle_button = tk.Button(
+            mqtt_frame,
+            text="Turn OFF",
+            command=self.toggle_mqtt,
+            bg="green",
+        )
+        self.mqtt_toggle_button.pack(side=tk.LEFT, padx=5)
+
+        schedule_frame = tk.Frame(right_frame)
+        schedule_frame.pack(pady=10)
+
+        schedule_label = tk.Label(schedule_frame, text="Schedule:")
+        schedule_label.pack(side=tk.LEFT, padx=5)
+
+        self.schedule_toggle_button = tk.Button(
+            schedule_frame,
+            text="Turn OFF",
+            command=self.toggle_schedule,
+            bg="green",
+        )
+        self.schedule_toggle_button.pack(side=tk.LEFT, padx=5)
+
         # Device status section
         device_frame = tk.Frame(right_frame)
         device_frame.pack(pady=10)
@@ -105,26 +134,38 @@ class MQTTView:
             on_button = tk.Button(
                 control_frame,
                 text="Turn On",
-                command=lambda d=device: self.control_device(d, "ON"),
+                command=lambda d=device: self.toggle_device(d),
+                bg="red",
             )
             on_button.pack(side=tk.LEFT)
 
-            off_button = tk.Button(
-                control_frame,
-                text="Turn Off",
-                command=lambda d=device: self.control_device(d, "OFF"),
-            )
-            off_button.pack(side=tk.LEFT)
-
             self.device_status_labels[device] = device_label
-            self.device_buttons[device] = (on_button, off_button)
+            self.device_buttons[device] = on_button
 
     def update_publish_topic(self):
         topic = self.publish_topic_entry.get()
+        print("update_publish_topic", topic)
+        print("type", type(topic))
+
+        topic = topic.strip()  # Remove leading/trailing whitespaces
+
+        if not topic:
+            print("Error: Topic cannot be empty Publish to '.'")
+            topic = "."
+
         self.controller.update_publish_topic(topic)
 
     def update_subscribe_topic(self):
         topic = self.subscribe_topic_entry.get()
+        print("update_subscribe_topic", topic)
+        print("type", type(topic))
+
+        topic = topic.strip()  # Remove leading/trailing whitespaces
+
+        if not topic:
+            print("Error: Topic cannot be empty subscribed to '.'")
+            topic = "."
+
         self.controller.update_subscribe_topic(topic)
 
     def send_message(self):
@@ -148,9 +189,39 @@ class MQTTView:
             text=f"Status: {status}", fg="green" if status == "Connected" else "red"
         )
 
-    def update_device_status(self, device, status):
+    def update_device_status(self, device, status, state):
         color = "green" if status == "Connected" else "red"
         self.device_status_labels[device].config(text=f"{device}: {status}", fg=color)
+        self.update_device_button(device, state)
 
     def control_device(self, device, action):
         self.controller.control_device(device, action)
+
+    def toggle_device(self, device):
+        current_text = self.device_buttons[device].cget("text")
+        new_action = "ON" if current_text == "Turn On" else "OFF"
+        self.control_device(device, new_action)
+
+    def update_device_button(self, device, state):
+        if state == "ON":
+            self.device_buttons[device].config(text="Turn Off", bg="green")
+        else:
+            self.device_buttons[device].config(text="Turn On", bg="red")
+
+    def toggle_mqtt(self):
+        current_text = self.mqtt_toggle_button.cget("text")
+        new_action = "ON" if current_text == "Turn On" else "OFF"
+        self.controller.control_mqtt(new_action)
+        self.mqtt_toggle_button.config(
+            text="Turn Off" if new_action == "ON" else "Turn On",
+            bg="green" if new_action == "ON" else "red",
+        )
+
+    def toggle_schedule(self):
+        current_text = self.schedule_toggle_button.cget("text")
+        new_action = "ON" if current_text == "Turn On" else "OFF"
+        self.controller.control_schedule(new_action)
+        self.schedule_toggle_button.config(
+            text="Turn Off" if new_action == "ON" else "Turn On",
+            bg="green" if new_action == "ON" else "red",
+        )

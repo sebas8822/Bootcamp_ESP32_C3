@@ -15,19 +15,30 @@ class MQTTModel:
         self.publish_topic = ""
         self.subscribe_topic = ""
         self.devices = {
-            f"ESP32-{i+1}": {"status": "Disconnected", "last_seen": 0} for i in range(6)
+            f"ESP32-{i+1}": {"status": "Disconnected", "last_seen": 0, "state": "OFF"}
+            for i in range(6)
         }
         self.controller = None
 
     def connect(self):
         self.client.connect(self.server, self.port, 60)
+        self.controller.update_status("Connected")
         self.client.loop_start()
+
+    def disconnect(self):
+        self.client.loop_stop()
+        self.client.disconnect()
+        self.controller.update_status("Disconnected")
 
     def on_connect(self, client, userdata, flags, rc):
         try:
             if rc == 0:
                 self.controller.log_message("Connected to MQTT Broker")
                 self.controller.update_status("Connected")
+                self.controller.log_message(f"current Publish to {self.publish_topic}")
+                self.controller.log_message(
+                    f"current Subscribes to {self.subscribe_topic}"
+                )
                 # Subscribe to status topics of all devices
                 self.client.subscribe(self.subscribe_topic)
             else:
@@ -39,7 +50,7 @@ class MQTTModel:
     def on_message(self, client, userdata, msg):
         message = msg.payload.decode()
         self.controller.topic_log_message(
-            f"Received message: {message} on topic {msg.topic}"
+            f"Topic: {msg.topic}\nReceived message: {message} "
         )
         self.update_device_status(msg.topic, message)
 
@@ -64,12 +75,15 @@ class MQTTModel:
             logging.error(f"Failed to publish message: {e}")
 
     def package_message(self, custom_message):
+        # Create JSON object
         packaged_message = {
             "type": "control",
-            "device": "MQTT_master",
+            "controller": "MQTT_master",
+            "device": "ALL",
             "status": "connected",  # assuming 'connected' is the intended status
             "message": custom_message,
         }
+
         return json.dumps(packaged_message)
 
     def set_controller(self, controller):
@@ -81,15 +95,23 @@ class MQTTModel:
             payload = json.loads(message)
             device = payload.get("device")
             status = payload.get("status")
+            state = payload.get("state")
 
-            if device and status:
+            if device and status and state:
                 if device not in self.devices:
-                    self.devices[device] = {"status": None, "last_seen": None}
+                    self.devices[device] = {
+                        "status": None,
+                        "last_seen": None,
+                        "state": "OFF",
+                    }
                 self.devices[device]["status"] = status
                 self.devices[device]["last_seen"] = time.time()
-                self.controller.update_device_status(device, status)
+                self.devices[device]["state"] = state
+                self.controller.update_device_status(device, status, state)
             else:
-                raise ValueError(f"Missing device or status in payload: {payload}")
+                raise ValueError(
+                    f"Missing device, status, or state in payload: {payload}"
+                )
         except json.JSONDecodeError as e:
             logging.error(f"Failed to decode JSON from message: {message}. Error: {e}")
         except ValueError as e:
@@ -98,15 +120,27 @@ class MQTTModel:
             logging.error(f"An unexpected error occurred: {e}")
 
     def control_device(self, device, action):
-        topic = f"{device}/control"
-        self.client.publish(topic, action)
-        self.controller.log_message(f"Sent {action} to {device}")
+        # Create JSON object
+        status_request = {
+            "type": "control",
+            "controller": "MQTT_master",
+            "device": device,
+            "status": "connected",  # assuming 'connected' is the intended status
+            "message": action,
+        }
+
+        # Serialize JSON object to a string
+        json_message = json.dumps(status_request)
+
+        # Publish JSON string to the control topic
+        self.publish_message(json_message)
 
     def request_status(self):
         # Create JSON object
         status_request = {
             "type": "control",
-            "device": "MQTT_master",
+            "controller": "MQTT_master",
+            "device": "ALL",
             "status": "connected",  # assuming 'connected' is the intended status
             "message": "status",
         }
@@ -125,4 +159,4 @@ class MQTTModel:
             if current_time - info["last_seen"] > timeout_threshold:
                 if info["status"] != "Disconnected":
                     info["status"] = "Disconnected"
-                    self.controller.update_device_status(device, "Disconnected")
+                    self.controller.update_device_status(device, "Disconnected", "OFF")

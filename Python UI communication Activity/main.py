@@ -21,9 +21,7 @@ if __name__ == "__main__":
 
     # Start the MQTT client after the GUI is fully initialized
     root.after(100, model.connect)
-
-    # Schedule the status request
-    root.after(10000, controller.schedule_status_request)
+    root.after(1000, controller.schedule_status_request)  # Schedule status request
 
     # Run the GUI loop
     root.mainloop()
