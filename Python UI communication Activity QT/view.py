@@ -1,5 +1,7 @@
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtGui
 from PyQt5.QtWidgets import QMainWindow
+from datetime import datetime
+import json
 
 
 class MQTTView(QMainWindow):
@@ -16,8 +18,8 @@ class MQTTView(QMainWindow):
             QtWidgets.QLineEdit, "MQTT_server_input"
         )
         self.mqtt_port_input = self.findChild(QtWidgets.QLineEdit, "MQTT_port_input")
-        self.publish_input_input = self.findChild(
-            QtWidgets.QLineEdit, "publish_input_input"
+        self.publish_topic_input = self.findChild(
+            QtWidgets.QLineEdit, "publish_topic_input"
         )
         self.subscribe_topic_input = self.findChild(
             QtWidgets.QLineEdit, "subscribe_topic_input"
@@ -93,7 +95,7 @@ class MQTTView(QMainWindow):
             lambda: self.control_master("OFF")
         )
         self.master_control_pushButton_request_status.clicked.connect(
-            self.request_status
+            lambda: self.control_master("status")
         )
         self.update_pub_pushButton.clicked.connect(self.update_publish_topic)
         self.update_sub_pushButton.clicked.connect(self.update_subscribe_topic)
@@ -103,6 +105,20 @@ class MQTTView(QMainWindow):
                 lambda _, d=i: self.toggle_device(d)
             )
 
+        # Preload task schedule message
+        self.message_payload_textEdit.setPlainText(
+            json.dumps(
+                {
+                    "type": "control",
+                    "controller": "MQTT_master",
+                    "device": "ALL",
+                    "status": "connected",
+                    "message": "status",
+                },
+                indent=4,
+            )
+        )
+
         # Initial styles
         self.update_button_style(self.mqtt_connection_pushButton)
         self.update_button_style(self.task_schedule_pushButton)
@@ -111,16 +127,12 @@ class MQTTView(QMainWindow):
 
     def toggle_mqtt_connection(self):
         current_text = self.mqtt_connection_pushButton.text()
-        new_action = "OFF" if current_text == "Turn ON" else "ON"
+        new_action = "ON" if current_text == "Turn ON" else "OFF"
         self.controller.control_mqtt(new_action)
-        self.mqtt_connection_pushButton.setText(
-            "Turn OFF" if new_action == "ON" else "Turn ON"
-        )
-        self.update_button_style(self.mqtt_connection_pushButton)
 
     def toggle_task_schedule(self):
         current_text = self.task_schedule_pushButton.text()
-        new_action = "OFF" if current_text == "Turn OFF" else "ON"
+        new_action = "ON" if current_text == "Turn ON" else "OFF"
         self.controller.control_schedule(new_action)
         self.task_schedule_pushButton.setText(
             "Turn OFF" if new_action == "ON" else "Turn ON"
@@ -138,24 +150,11 @@ class MQTTView(QMainWindow):
     def publish_message(self):
         message = self.message_payload_textEdit.toPlainText()
         self.controller.send_message(message)
-        self.message_payload_textEdit.clear()
 
     def control_master(self, action):
         self.controller.control_master(action)
 
-    def request_status(self):
-        self.controller.request_status()
-
-    def update_publish_topic(self):
-        topic = self.publish_input_input.text()
-        self.controller.update_publish_topic(topic)
-
-    def update_subscribe_topic(self):
-        topic = self.subscribe_topic_input.text()
-        self.controller.update_subscribe_topic(topic)
-
     def update_button_style(self, button):
-        print(f"button: {button} button_text:{button.text()}")
         if button.text() == "Turn ON":
             button.setStyleSheet(
                 """
@@ -188,15 +187,35 @@ class MQTTView(QMainWindow):
     def log_message(self, message):
         self.activity_log_textBrowser.append(message)
 
-    def update_status(self, status):
-        color = "green" if status == "Connected" else "red"
-        self.findChild(QtWidgets.QLabel, "status_label").setStyleSheet(
-            f"color: {color};"
-        )
-        self.findChild(QtWidgets.QLabel, "status_label").setText(status)
-
     def update_topic_log(self, message, topic_type):
+        now = datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
         if topic_type == "publish":
-            self.published_log_textBrowser.append(message)
+            self.published_log_textBrowser.append(f"{formatted_now}\n{message}\n")
+            self.published_log_textBrowser.moveCursor(QtGui.QTextCursor.End)
         else:
-            self.subscribed_log_textBrowser.append(message)
+            self.subscribed_log_textBrowser.append(f"{formatted_now}\n{message}\n")
+            self.subscribed_log_textBrowser.moveCursor(QtGui.QTextCursor.End)
+
+    def update_publish_topic(self):
+        topic = self.publish_topic_input.text()
+        print("update_publish_topic:", topic)
+        if not topic:
+            self.log_message("Error: Topic cannot be empty.")
+        else:
+            self.controller.update_publish_topic(topic)
+
+    def update_subscribe_topic(self):
+        topic = self.subscribe_topic_input.text()
+        print("update_subscribe_topic:", topic)
+        if not topic:
+            self.log_message("Error: Topic cannot be empty.")
+        else:
+            self.controller.update_subscribe_topic(topic)
+
+    def update_device_status(self, device, status, state):
+        label = self.device_status_labels.get(f"{device.lower()}_id_status_label")
+        if label:
+            color = "green" if status == "Connected" else "red"
+            label.setText(status)
+            label.setStyleSheet(f"color: {color};")
