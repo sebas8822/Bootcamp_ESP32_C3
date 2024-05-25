@@ -2,9 +2,16 @@ from PyQt5 import QtWidgets, uic, QtGui
 from PyQt5.QtWidgets import QMainWindow
 from datetime import datetime
 import json
+import logging
+from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import pyqtSignal
 
 
 class MQTTView(QMainWindow):
+    log_message_signal = pyqtSignal(str)
+    update_topic_log_signal = pyqtSignal(str, str)
+    update_device_status_signal = pyqtSignal(str, str, str)
+
     def __init__(self, controller):
         super().__init__()
         uic.loadUi(
@@ -12,6 +19,11 @@ class MQTTView(QMainWindow):
         )  # Replace with the actual path to your .ui file
 
         self.controller = controller
+
+        # Connect signals to slots
+        self.log_message_signal.connect(self.log_message)
+        self.update_topic_log_signal.connect(self.update_topic_log)
+        self.update_device_status_signal.connect(self.update_device_status)
 
         # Find and assign widgets
         self.mqtt_server_input = self.findChild(
@@ -125,6 +137,8 @@ class MQTTView(QMainWindow):
         for i in range(1, 7):
             self.update_button_style(self.device_buttons[f"esp32_{i}_pushButton"])
 
+        self.test_buttons()
+
     def toggle_mqtt_connection(self):
         current_text = self.mqtt_connection_pushButton.text()
         new_action = "ON" if current_text == "Turn ON" else "OFF"
@@ -144,8 +158,6 @@ class MQTTView(QMainWindow):
         current_text = button.text()
         new_action = "ON" if current_text == "Turn ON" else "OFF"
         self.controller.control_device(f"ESP32-{device}", new_action)
-        button.setText("Turn OFF" if new_action == "ON" else "Turn ON")
-        self.update_button_style(button)
 
     def publish_message(self):
         message = self.message_payload_textEdit.toPlainText()
@@ -199,7 +211,6 @@ class MQTTView(QMainWindow):
 
     def update_publish_topic(self):
         topic = self.publish_topic_input.text()
-        print("update_publish_topic:", topic)
         if not topic:
             self.log_message("Error: Topic cannot be empty.")
         else:
@@ -207,15 +218,59 @@ class MQTTView(QMainWindow):
 
     def update_subscribe_topic(self):
         topic = self.subscribe_topic_input.text()
-        print("update_subscribe_topic:", topic)
         if not topic:
             self.log_message("Error: Topic cannot be empty.")
         else:
             self.controller.update_subscribe_topic(topic)
 
     def update_device_status(self, device, status, state):
-        label = self.device_status_labels.get(f"{device.lower()}_id_status_label")
+        print("update_device_status")
+        print("device", device)
+        print("status", status)
+        print("state", state)
+        print("self.device_status_labels", self.device_status_labels)
+
+        device_key = device.lower().replace("-", "_")
+        label = self.device_status_labels.get(f"{device_key}_id_status_label")
+        print("label", label)
+
         if label:
             color = "green" if status == "Connected" else "red"
             label.setText(status)
             label.setStyleSheet(f"color: {color};")
+            self.update_device_button(device, state)
+
+    def update_device_button(self, device, state):
+        try:
+            print("update_device_button_start")
+            device_key = device.lower().replace("-", "_")
+            button = self.device_buttons.get(f"{device_key}_pushButton")
+            print("update_device_button_processed button")
+
+            if button:
+                if state == "ON":
+                    button.setText("Turn OFF")
+                    # self.update_button_style(button)
+                    print("update_device_button_end")
+                else:
+                    button.setText("Turn ON")
+                    # self.update_button_style(button)
+                    print("update_device_button_end")
+        except Exception as e:
+            logging.error(f"Failed to change the button color: {e}")
+            logging.exception("Exception occurred")  # This will print the stack trace
+
+    def test_buttons(self):
+        for i in range(6):
+            QTimer.singleShot(
+                i * 1000,
+                lambda idx=i: self.update_device_status(
+                    f"ESP32-{idx + 1}", "Connected", "ON"
+                ),
+            )
+            QTimer.singleShot(
+                (i * 1000) + 500,
+                lambda idx=i: self.update_device_status(
+                    f"ESP32-{idx + 1}", "Disconnected", "OFF"
+                ),
+            )

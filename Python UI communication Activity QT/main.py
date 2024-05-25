@@ -1,20 +1,27 @@
 import sys
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtGui import QTextCursor
+from PyQt5 import QtWidgets
 from model import MQTTModel
 from view import MQTTView
 from controller import MQTTController
+import logging
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
+    try:
+        app = QtWidgets.QApplication(sys.argv)
 
-    # Initialize the model, view, and controller
-    model = MQTTModel()
-    view = MQTTView(None)  # Create the view without controller initially
-    controller = MQTTController(model, view)
+        # Initialize the view
+        view = MQTTView(None)  # Create the view without controller initially
 
-    # Bind the view to the controller
-    view.controller = controller
+        # Initialize the model, passing the view
+        model = MQTTModel(view)
 
-    view.show()
-    sys.exit(app.exec_())
+        # Initialize the controller
+        controller = MQTTController(model, view)
+
+        # Bind the view to the controller
+        view.controller = controller
+
+        view.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        logging.error(f"Failed application: {e}")

@@ -1,8 +1,9 @@
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QObject, pyqtSlot
 
 
-class MQTTController:
+class MQTTController(QObject):
     def __init__(self, model, view):
+        super().__init__()
         self.model = model
         self.view = view
         self.timer = QTimer(self.view)
@@ -12,6 +13,10 @@ class MQTTController:
 
         # Connect the timer to the schedule_status_request method
         self.timer.timeout.connect(self.schedule_status_request)
+
+        # Connect model signals to slots
+        self.model.message_received.connect(self.on_message_received)
+        self.model.connection_status_changed.connect(self.on_connection_status_changed)
 
     def control_mqtt(self, action):
         print("Action on control mqtt", action)
@@ -99,8 +104,23 @@ class MQTTController:
             self.stop_status_request()
         self.view.log_message(f"Task Schedule {action}")
 
+    @pyqtSlot(str, str)
+    def on_message_received(self, topic, message):
+        self.update_topic_log(message, "subscribed")
+        self.model.update_device_status(topic, message)
+
+    @pyqtSlot(str)
+    def on_connection_status_changed(self, status):
+        if status == "Connected":
+            self.update_mqtt_connection_pushButton("Turn OFF")
+        else:
+            self.update_mqtt_connection_pushButton("Turn ON")
+
     def update_device_status(self, device, status, state):
         self.view.update_device_status(device, status, state)
 
     def control_master(self, action):
         self.model.control_master(action)
+
+    def control_device(self, device, action):
+        self.model.control_device(device, action)

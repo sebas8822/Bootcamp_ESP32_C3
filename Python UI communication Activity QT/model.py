@@ -2,10 +2,16 @@ import paho.mqtt.client as mqtt
 import logging
 import json
 import time
+from PyQt5.QtCore import QObject, pyqtSignal
 
 
-class MQTTModel:
-    def __init__(self):
+class MQTTModel(QObject):
+    message_received = pyqtSignal(str, str)
+    connection_status_changed = pyqtSignal(str)
+
+    def __init__(self, view):
+        super().__init__()
+        self.view = view  # Assign the view to an instance variable
         # Local MQTT broker configuration
         self.local_server = None
         self.local_port = None
@@ -28,6 +34,7 @@ class MQTTModel:
         self.local_server = server
         self.local_port = port
         if not self.local_server or not self.local_port:
+            self.connection_status_changed.emit("Disconnected")
             self.controller.log_message(
                 "MQTT server IP or port is required to establish the connection"
             )
@@ -38,15 +45,16 @@ class MQTTModel:
             self.local_client.loop_start()
         except Exception as e:
             logging.error(f"Failed to connect: {e}")
+            self.connection_status_changed.emit("Disconnected")
             self.controller.log_message(
                 f"Failed to connect to the MQTT server: {e}. Please check inputs!"
             )
-            self.controller.update_mqtt_connection_pushButton("Turn ON")
 
     def disconnect_local(self):
         try:
             self.local_client.loop_stop()
             self.local_client.disconnect()
+            self.connection_status_changed.emit("Disconnected")
         except Exception as e:
             logging.error(f"Failed to disconnect: {e}")
             self.controller.log_message(
@@ -55,10 +63,12 @@ class MQTTModel:
 
     def on_local_connect(self, client, userdata, flags, rc):
         if rc == 0:
+            self.connection_status_changed.emit("Connected")
             self.controller.log_message(
                 f"Connected to MQTT server at {self.local_server}:{self.local_port}"
             )
         else:
+            self.connection_status_changed.emit("Disconnected")
             self.controller.log_message(
                 f"Failed to connect to MQTT server, return code {rc}"
             )
@@ -76,7 +86,39 @@ class MQTTModel:
     def on_local_message(self, local_client, userdata, msg):
         print("I am here model")
         message = msg.payload.decode()
-        self.controller.update_topic_log(message, "subscribed")
+        self.message_received.emit(msg.topic, message)
+        self.update_device_status(msg.topic, message)
+
+    def update_device_status(self, topic, message):
+        try:
+            # Parse JSON message
+            payload = json.loads(message)
+            device = payload.get("device")
+            status = payload.get("status")
+            state = payload.get("state")
+
+            if device and status and state:
+                if device not in self.devices:
+                    self.devices[device] = {
+                        "status": None,
+                        "last_seen": None,
+                        "state": "OFF",
+                    }
+                self.devices[device]["status"] = status
+                self.devices[device]["last_seen"] = time.time()
+                self.devices[device]["state"] = state
+                self.controller.update_device_status(device, status, state)
+
+            else:
+                raise ValueError(
+                    f"Missing device, status, or state in payload: {payload}"
+                )
+        except json.JSONDecodeError as e:
+            logging.error(f"Failed to decode JSON from message: {message}. Error: {e}")
+        except ValueError as e:
+            logging.error(f"Error: {e}")
+        except Exception as e:
+            logging.error(f"An unexpected error occurred: {e}")
 
     def publish_message_local(self, message):
         try:
@@ -101,6 +143,22 @@ class MQTTModel:
         # Publish JSON string to the control topic
         self.publish_message_local(json_message)
 
+    def control_device(self, device, action):
+        # Create JSON object
+        status_request = {
+            "type": "control",
+            "controller": "MQTT_master",
+            "device": device,
+            "status": "connected",  # assuming 'connected' is the intended status
+            "message": action,
+        }
+
+        # Serialize JSON object to a string
+        json_message = json.dumps(status_request)
+
+        # Publish JSON string to the control topic
+        self.publish_message_local(json_message)
+
     def check_device_timeouts(self):
         current_time = time.time()
         timeout_threshold = 10  # seconds
@@ -109,4 +167,4 @@ class MQTTModel:
             if current_time - info["last_seen"] > timeout_threshold:
                 if info["status"] != "Disconnected":
                     info["status"] = "Disconnected"
-                    # self.controller.update_device_status(device, "Disconnected", "OFF")
+                    self.controller.update_device_status(device, "Disconnected", "OFF")
