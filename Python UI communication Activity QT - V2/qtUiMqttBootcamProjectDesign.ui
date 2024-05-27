@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1086</width>
-    <height>651</height>
+    <width>1117</width>
+    <height>671</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -131,7 +131,7 @@ QPushButton {
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>300</y>
+      <y>310</y>
       <width>341</width>
       <height>301</height>
      </rect>
@@ -184,8 +184,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <property name="geometry">
      <rect>
       <x>370</x>
-      <y>300</y>
-      <width>341</width>
+      <y>310</y>
+      <width>361</width>
       <height>301</height>
      </rect>
     </property>
@@ -217,9 +217,9 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <widget class="QGroupBox" name="groupBox_6">
     <property name="geometry">
      <rect>
-      <x>730</x>
-      <y>300</y>
-      <width>341</width>
+      <x>750</x>
+      <y>310</y>
+      <width>351</width>
       <height>301</height>
      </rect>
     </property>
@@ -261,9 +261,9 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <widget class="QGroupBox" name="groupBox_4">
     <property name="geometry">
      <rect>
-      <x>730</x>
+      <x>750</x>
       <y>0</y>
-      <width>341</width>
+      <width>351</width>
       <height>71</height>
      </rect>
     </property>
@@ -309,10 +309,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <widget class="QGroupBox" name="groupBox_3">
     <property name="geometry">
      <rect>
-      <x>730</x>
+      <x>750</x>
       <y>70</y>
-      <width>341</width>
-      <height>231</height>
+      <width>351</width>
+      <height>241</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -385,7 +385,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <item row="2" column="2">
       <widget class="QPushButton" name="esp32_2_pushButton">
        <property name="text">
-        <string>Turn ON</string>
+        <string>ON/OFF</string>
        </property>
       </widget>
      </item>
@@ -428,7 +428,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <item row="6" column="2">
       <widget class="QPushButton" name="esp32_6_pushButton">
        <property name="text">
-        <string>Turn ON</string>
+        <string>ON/OFF</string>
        </property>
       </widget>
      </item>
@@ -496,14 +496,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Turn ON</string>
+        <string>ON/OFF</string>
        </property>
       </widget>
      </item>
      <item row="5" column="2">
       <widget class="QPushButton" name="esp32_5_pushButton">
        <property name="text">
-        <string>Turn ON</string>
+        <string>ON/OFF</string>
        </property>
       </widget>
      </item>
@@ -526,7 +526,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <item row="3" column="2">
       <widget class="QPushButton" name="esp32_3_pushButton">
        <property name="text">
-        <string>Turn ON</string>
+        <string>ON/OFF</string>
        </property>
       </widget>
      </item>
@@ -549,7 +549,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <item row="4" column="2">
       <widget class="QPushButton" name="esp32_4_pushButton">
        <property name="text">
-        <string>Turn ON</string>
+        <string>ON/OFF</string>
        </property>
       </widget>
      </item>
@@ -644,8 +644,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <rect>
       <x>370</x>
       <y>0</y>
-      <width>341</width>
-      <height>301</height>
+      <width>361</width>
+      <height>311</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -678,6 +678,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
        <layout class="QGridLayout" name="gridLayout">
         <item row="1" column="1">
          <widget class="QLineEdit" name="publish_topic_input">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="font">
            <font>
             <pointsize>10</pointsize>
@@ -690,6 +696,18 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="subscribe_topic_label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="font">
            <font>
             <pointsize>10</pointsize>
@@ -699,10 +717,22 @@ li.checked::marker { content: &quot;\2612&quot;; }
           <property name="text">
            <string>Subscribe Topic</string>
           </property>
+          <property name="scaledContents">
+           <bool>false</bool>
+          </property>
+          <property name="wordWrap">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="publish_topic_label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="font">
            <font>
             <pointsize>10</pointsize>
@@ -716,6 +746,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item row="0" column="1">
          <widget class="QLineEdit" name="subscribe_topic_input">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="font">
            <font>
             <pointsize>10</pointsize>
@@ -725,6 +761,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item row="1" column="2">
          <widget class="QPushButton" name="update_pub_pushButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string/>
           </property>
@@ -736,6 +778,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </item>
         <item row="0" column="2">
          <widget class="QPushButton" name="update_sub_pushButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string/>
           </property>
@@ -790,7 +838,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <item>
          <widget class="QPushButton" name="task_schedule_pushButton">
           <property name="text">
-           <string>Turn ON</string>
+           <string>ON/OFF</string>
           </property>
          </widget>
         </item>
@@ -812,7 +860,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
       <x>10</x>
       <y>0</y>
       <width>341</width>
-      <height>301</height>
+      <height>311</height>
      </rect>
     </property>
     <property name="font">
@@ -1030,7 +1078,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
            <bool>false</bool>
           </property>
           <property name="text">
-           <string>Turn ON</string>
+           <string>ON/OFF</string>
           </property>
           <property name="checkable">
            <bool>false</bool>
@@ -1048,7 +1096,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1086</width>
+     <width>1117</width>
      <height>21</height>
     </rect>
    </property>

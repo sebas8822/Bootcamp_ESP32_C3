@@ -14,6 +14,7 @@ class MQTTModel:
         self.client.on_message = self.on_message
         self.publish_topic = ""
         self.subscribe_topic = ""
+        self.current_subscribe_topic = None
         self.devices = {
             f"ESP32-{i+1}": {"status": "Disconnected", "last_seen": 0, "state": "OFF"}
             for i in range(6)
@@ -35,12 +36,16 @@ class MQTTModel:
             if rc == 0:
                 self.controller.log_message("Connected to MQTT Broker")
                 self.controller.update_status("Connected")
-                self.controller.log_message(f"current Publish to {self.publish_topic}")
                 self.controller.log_message(
-                    f"current Subscribes to {self.subscribe_topic}"
+                    f"Current publish topic: {self.publish_topic}"
                 )
-                # Subscribe to status topics of all devices
-                self.client.subscribe(self.subscribe_topic)
+                self.controller.log_message(
+                    f"Current subscribe topic: {self.subscribe_topic}"
+                )
+                # Subscribe to initial status topics of all devices
+                if self.subscribe_topic:
+                    self.client.subscribe(self.subscribe_topic)
+                    self.current_subscribe_topic = self.subscribe_topic
             else:
                 self.controller.log_message(f"Failed to connect, return code {rc}")
                 self.controller.update_status("Disconnected")
@@ -58,8 +63,11 @@ class MQTTModel:
         self.publish_topic = topic
 
     def set_subscribe_topic(self, topic):
+        if self.current_subscribe_topic:
+            self.client.unsubscribe(self.current_subscribe_topic)
         self.subscribe_topic = topic
         self.client.subscribe(topic)
+        self.current_subscribe_topic = topic
 
     def publish_message(self, message):
         try:
