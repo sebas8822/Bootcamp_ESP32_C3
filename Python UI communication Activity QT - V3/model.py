@@ -60,9 +60,9 @@ class MQTTModel(QObject):
         try:
             self.local_client.connect(self.local_server, int(self.local_port), 60)
             self.local_client.loop_start()
-            self.controller.log_message(
-                f"Connected to local server: {self.local_server}:{self.local_port}"
-            )
+            # self.controller.log_message(
+            #     f"Connected to local server: {self.local_server}:{self.local_port}"
+            # )
             return 100  # Success code
         except Exception as e:
             logging.error(f"Failed to connect: {e}")
