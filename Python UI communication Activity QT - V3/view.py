@@ -14,16 +14,12 @@ class MQTTView(QMainWindow):
 
     def __init__(self, controller):
         super().__init__()
-        uic.loadUi(
-            "qtUiMqttBootcamProjectDesign.ui", self
-        )  # Replace with the actual path to your .ui file
+        uic.loadUi("qtUiMqttBootcamProjectDesign.ui", self)
 
         self.controller = controller
 
-        # Connect signals to slots
-        self.log_message_signal.connect(self.log_message)
-        self.update_topic_log_signal.connect(self.update_topic_log)
-        self.update_device_status_signal.connect(self.update_device_status)
+        # Initialize button states
+        self.button_states = {"mqtt_connection": "OFF", "task_schedule": "OFF"}
 
         # Find and assign widgets
         self.mqtt_server_input = self.findChild(
@@ -36,9 +32,7 @@ class MQTTView(QMainWindow):
         self.subscribe_topic_input = self.findChild(
             QtWidgets.QLineEdit, "subscribe_topic_input"
         )
-        self.user_input = self.findChild(QtWidgets.QLineEdit, "user_input")
-        self.password_input = self.findChild(QtWidgets.QLineEdit, "password_input")
-        self.password_input.setEchoMode(QtWidgets.QLineEdit.Password)
+
         self.client_id_input = self.findChild(QtWidgets.QLineEdit, "client_id_input")
         self.message_payload_textEdit = self.findChild(
             QtWidgets.QTextEdit, "message_payload_textEdit"
@@ -96,6 +90,9 @@ class MQTTView(QMainWindow):
                 QtWidgets.QLabel, f"esp32_{i}_id_status_label"
             )
 
+            # Initialize button state
+            self.button_states[f"ESP32-{i}"] = "OFF"
+
         # Connect signals to slots
         self.mqtt_connection_pushButton.clicked.connect(self.toggle_mqtt_connection)
         self.task_schedule_pushButton.clicked.connect(self.toggle_task_schedule)
@@ -114,7 +111,7 @@ class MQTTView(QMainWindow):
 
         for i in range(1, 7):
             self.device_buttons[f"esp32_{i}_pushButton"].clicked.connect(
-                lambda _, d=i: self.toggle_device(d)
+                lambda _, d=i: self.toggle_device(f"ESP32-{d}")
             )
 
         # Preload task schedule message
@@ -131,33 +128,21 @@ class MQTTView(QMainWindow):
             )
         )
 
-        # Initial styles
-        # self.update_button_style(self.mqtt_connection_pushButton)
-        # self.update_button_style(self.task_schedule_pushButton)
-        # for i in range(1, 7):
-        #     self.update_button_style(self.device_buttons[f"esp32_{i}_pushButton"])
-
-        # self.test_buttons()
-
     def toggle_mqtt_connection(self):
-        current_text = self.mqtt_connection_pushButton.text()
-        new_action = "ON" if current_text == "Turn ON" else "OFF"
-        self.controller.control_mqtt(new_action)
+        current_state = self.button_states["mqtt_connection"]
+        new_state = "OFF" if current_state == "ON" else "ON"
+        self.controller.control_mqtt(new_state)
 
     def toggle_task_schedule(self):
-        current_text = self.task_schedule_pushButton.text()
-        new_action = "ON" if current_text == "Turn ON" else "OFF"
-        self.controller.control_schedule(new_action)
-        self.task_schedule_pushButton.setText(
-            "Turn OFF" if new_action == "ON" else "Turn ON"
-        )
-        # self.update_button_style(self.task_schedule_pushButton)
+        current_state = self.button_states["task_schedule"]
+        new_state = "OFF" if current_state == "ON" else "ON"
+        self.controller.control_schedule(new_state)
+        self.button_states["task_schedule"] = new_state
 
     def toggle_device(self, device):
-        button = self.device_buttons[f"esp32_{device}_pushButton"]
-        current_text = button.text()
-        new_action = "ON" if current_text == "Turn ON" else "OFF"
-        self.controller.control_device(f"ESP32-{device}", new_action)
+        current_state = self.button_states[device]
+        new_state = "OFF" if current_state == "ON" else "ON"
+        self.controller.control_device(device, new_state)
 
     def publish_message(self):
         message = self.message_payload_textEdit.toPlainText()
@@ -166,37 +151,8 @@ class MQTTView(QMainWindow):
     def control_master(self, action):
         self.controller.control_master(action)
 
-    def update_button_style(self, button):
-        if button.text() == "Turn OFF":
-            button.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: red;
-                    color: white;
-                    border: 1px solid darkred;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: darkred;
-                }
-            """
-            )
-        else:
-            button.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: cyan;
-                    color: black;
-                    border: 1px solid darkcyan;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: darkcyan;
-                }
-            """
-            )
-
     def log_message(self, message):
+        print(" I am log message")
         self.activity_log_textBrowser.append(message)
 
     def update_topic_log(self, message, topic_type):
@@ -224,20 +180,13 @@ class MQTTView(QMainWindow):
             self.controller.update_subscribe_topic(topic)
 
     def update_device_status(self, device, status, state):
-        print("update_device_status")
-        print("device", device)
-        print("status", status)
-        print("state", state)
-        print("self.device_status_labels", self.device_status_labels)
-
         device_key = device.lower().replace("-", "_")
         label = self.device_status_labels.get(f"{device_key}_id_status_label")
-        print("label", label)
-
         if label:
             color = "green" if status == "Connected" else "red"
             label.setText(status)
             label.setStyleSheet(f"color: {color};")
+            self.button_states[device] = state
             self.update_device_button(device, state)
 
     def update_device_button(self, device, state):
@@ -248,30 +197,38 @@ class MQTTView(QMainWindow):
             print("update_device_button_processed button")
 
             if button:
-                if state == "ON":
-                    button.setText("Turn OFF")
-                    button.setStyleSheet("background-color: green")
-                    print("update_device_button_end")
-                else:
-                    button.setText("Turn ON")
-                    button.setStyleSheet("background-color: red")
-
-                    print("update_device_button_end")
+                self.update_button_state(button, state)
+                print("update_device_button_end")
         except Exception as e:
             logging.error(f"Failed to change the button color: {e}")
             logging.exception("Exception occurred")  # This will print the stack trace
 
-    # def test_buttons(self):
-    #     for i in range(6):
-    #         QTimer.singleShot(
-    #             i * 1000,
-    #             lambda idx=i: self.update_device_status(
-    #                 f"ESP32-{idx + 1}", "Connected", "ON"
-    #             ),
-    #         )
-    #         QTimer.singleShot(
-    #             (i * 1000) + 500,
-    #             lambda idx=i: self.update_device_status(
-    #                 f"ESP32-{idx + 1}", "Disconnected", "OFF"
-    #             ),
-    #         )
+    def update_button_state(self, button, state):
+        if state == "OFF":
+            button.setStyleSheet(
+                """
+                QPushButton {
+                    background-color: red;
+                    color: white;
+                    border: 1px solid darkred;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background-color: darkred;
+                }
+            """
+            )
+        else:
+            button.setStyleSheet(
+                """
+                QPushButton {
+                    background-color: cyan;
+                    color: black;
+                    border: 1px solid darkcyan;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background-color: darkcyan;
+                }
+            """
+            )

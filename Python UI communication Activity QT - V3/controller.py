@@ -22,9 +22,10 @@ class MQTTController(QObject):
         print("Action on control mqtt", action)
         if action == "ON":
             if self.view.local_radioButton.isChecked():
+                print("Local entry")
                 server = self.view.mqtt_server_input.text()
                 port = self.view.mqtt_port_input.text()
-                print("I am here control_mqtt 1")
+
                 if server and port:
                     print("I am here control_mqtt")
                     result_connect = self.model.connect_local(server, port)
@@ -41,9 +42,36 @@ class MQTTController(QObject):
                     )
                     self.view.button_states["mqtt_connection"] = "OFF"
                     self.update_mqtt_connection_button("OFF")
+            if self.view.aws_radioButton.isChecked():
+                print("AWS entry")
+                server = self.view.mqtt_server_input.text()
+                port = self.view.mqtt_port_input.text()
+                client_id = self.view.client_id_input.text()
+
+                if server and port and client_id:
+                    print("Pass first if")
+                    result_connect = self.model.connect_aws(server, port, client_id)
+                    if result_connect == 100:
+                        self.view.button_states["mqtt_connection"] = "ON"
+                        self.update_mqtt_connection_button("ON")
+                    else:  # Covers result_connect == 50 and any other return code
+                        self.view.button_states["mqtt_connection"] = "OFF"
+                        self.update_mqtt_connection_button("OFF")
+                else:
+                    print("I am here control_mqtt no inputs")
+                    self.log_message(
+                        "MQTT server IP or port or client id is required to establish the connection"
+                    )
+                    self.view.button_states["mqtt_connection"] = "OFF"
+                    self.update_mqtt_connection_button("OFF")
         else:
             if self.view.local_radioButton.isChecked():
                 self.model.disconnect_local()
+                self.view.button_states["mqtt_connection"] = "OFF"
+                self.update_mqtt_connection_button("OFF")
+
+            if self.view.aws_radioButton.isChecked():
+                self.model.disconnect_aws()
                 self.view.button_states["mqtt_connection"] = "OFF"
                 self.update_mqtt_connection_button("OFF")
 
@@ -58,18 +86,33 @@ class MQTTController(QObject):
         self.view.update_topic_log(message, topic_type)
 
     def update_publish_topic(self, topic):
-        self.model.set_publish_topic_local(topic)
-        self.log_message(f"Publish to topic: {topic}")
+        if self.view.local_radioButton.isChecked():
+            self.model.set_publish_topic_local(topic)
+            self.log_message(f"Publish to topic on local: {topic}")
+        else:
+            self.model.set_publish_topic_aws(topic)
+            self.log_message(f"Publish to topic on AWS: {topic}")
 
     def update_subscribe_topic(self, topic):
-        self.model.set_subscribe_topic_local(topic)
-        self.log_message(f"Subscribed to topic: {topic}")
+        if self.view.local_radioButton.isChecked():
+            self.model.set_subscribe_topic_local(topic)
+            self.log_message(f"Subscribed to topic on local: {topic}")
+        else:
+            self.model.set_subscribe_topic_aws(topic)
+            self.log_message(f"Subscribed to topic on AWS: {topic}")
 
     def send_message(self, message):
-        self.model.publish_message_local(message)
+        if self.view.local_radioButton.isChecked():
+            self.model.publish_message_local(message)
+        else:
+            self.model.publish_message_aws(message)
 
     def schedule_status_request(self):
-        self.model.control_master("status")
+        json_message = self.model.control_master("status")
+        if self.view.local_radioButton.isChecked():
+            self.model.publish_message_local(json_message)
+        else:
+            self.model.publish_message_aws(json_message)
         self.model.check_device_timeouts()  # Check for device timeouts
 
     def start_status_request(self):
@@ -101,7 +144,15 @@ class MQTTController(QObject):
         self.view.update_device_status(device, status, state)
 
     def control_master(self, action):
-        self.model.control_master(action)
+        json_message = self.model.control_master(action)
+        if self.view.local_radioButton.isChecked():
+            self.model.publish_message_local(json_message)
+        else:
+            self.model.publish_message_aws(json_message)
 
     def control_device(self, device, action):
-        self.model.control_device(device, action)
+        json_message = self.model.control_device(device, action)
+        if self.view.local_radioButton.isChecked():
+            self.model.publish_message_local(json_message)
+        else:
+            self.model.publish_message_aws(json_message)

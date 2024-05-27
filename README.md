@@ -1,7 +1,3 @@
-
-
----
-
 # Bootcamp Session
 
 ## Bootcamp Structure
@@ -16,6 +12,7 @@ This bootcamp is designed to introduce participants to the fundamentals of IoT d
 4. **Integrate with AWS IoT Core:** Configure and connect the ESP32 to AWS IoT Core to control devices remotely and securely.
 5. **Develop Practical IoT Skills:** Through building a small IoT project, develop the skills needed for larger-scale IoT development.
 
+
 ## Requirements
 
 - Arduino IDE
@@ -29,11 +26,14 @@ This bootcamp is designed to introduce participants to the fundamentals of IoT d
 
 ### Part 2: Physical LED Control with ESP32 (1 hour)
 
+![LED Circuit](https://github.com/sebas8822/Bootcamp_ESP32_C3/blob/main/Breadboard_ESP32_C3.png)
+
 - **Circuit Setup:** Connecting an LED to the ESP32.
 - **Programming:** Writing a simple program to control the LED physically using a button.
 - **Testing and Troubleshooting:** Ensuring setups work and troubleshooting issues.
 
 ### Part 3: Connecting ESP32 to AWS IoT Core (1 hour 15 minutes)
+
 
 - **Introduction to AWS IoT Core:** Explanation of AWS IoT Core and its role in IoT.
 - **Configuration:** Setting up ESP32 to connect to AWS IoT Core.
@@ -86,4 +86,3 @@ This bootcamp is designed to introduce participants to the fundamentals of IoT d
 - **Flash:** Non-volatile storage technology that can be electrically erased and reprogrammed.
 - **CoAP (Constrained Application Protocol):** Web transfer protocol for constrained nodes and networks in IoT.
 - **WebSocket:** Protocol providing full-duplex communication channels over a single TCP connection.
-
