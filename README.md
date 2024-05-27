@@ -18,7 +18,7 @@ This bootcamp is designed to introduce participants to the fundamentals of IoT d
 - Arduino IDE
 - AWS CLI
 
-### Part 1: Introduction to IoT and ESP32 (30 minutes)
+### Part 1: Introduction to IoT and ESP32 
 
 - **Overview of IoT:** Explanation of IoT and its applications.
 - **Introduction to ESP32:** Discuss capabilities and suitability for IoT projects.
@@ -26,21 +26,22 @@ This bootcamp is designed to introduce participants to the fundamentals of IoT d
 
 ### Part 2: Physical LED Control with ESP32 (1 hour)
 
-![LED Circuit](https://github.com/sebas8822/Bootcamp_ESP32_C3/blob/main/Breadboard_ESP32_C3.png)
+![LED Circuit](https://github.com/sebas8822/Bootcamp_ESP32_C3/blob/main/Pics/Breadboard_ESP32_C3.png)
 
 - **Circuit Setup:** Connecting an LED to the ESP32.
 - **Programming:** Writing a simple program to control the LED physically using a button.
 - **Testing and Troubleshooting:** Ensuring setups work and troubleshooting issues.
 
-### Part 3: Connecting ESP32 to AWS IoT Core (1 hour 15 minutes)
+### Part 3: Connecting ESP32 to AWS IoT Core 
 
+![LED Circuit](https://github.com/sebas8822/Bootcamp_ESP32_C3/blob/main/Pics/User_interface_mqtt_testing.png)
 
 - **Introduction to AWS IoT Core:** Explanation of AWS IoT Core and its role in IoT.
 - **Configuration:** Setting up ESP32 to connect to AWS IoT Core.
 - **Virtual Control:** Creating a virtual button using AWS IoT Core to control the LED.
 - **Security:** Discussing security practices for IoT.
 
-### Part 4: Final Integration and Q&A (15 minutes)
+### Part 4: Final Integration and Q&A 
 
 - **Integration Check:** Ensuring setups work as intended, with LED controllable both physically and virtually.
 - **Q&A Session:** Answering participants' questions and providing clarifications.
