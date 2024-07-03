@@ -31,10 +31,10 @@ class MQTTModel(QObject):
         # AWS IoT Core configuration
         self.aws_endpoint = ""
         self.aws_port = 0
-        self.aws_cert_filepath = r"connect_device_package/Team1_device.cert.pem"
-        self.aws_pri_key_filepath = r"connect_device_package/Team1_device.private.key"
-        self.aws_ca_filepath = r"connect_device_package/root-CA.crt"
-        self.aws_client_id = "master_device"
+        self.aws_cert_filepath = r"connect_device_package/device-certificate.pem.crt"
+        self.aws_pri_key_filepath = r"connect_device_package/key-private.pem.key"
+        self.aws_ca_filepath = r"connect_device_package/AmazonRootCA1.pem"
+        self.aws_client_id = "device_2"
         self.aws_publish_topic = ""
         self.aws_subscribe_topic = ""
         self.aws_connection = None
