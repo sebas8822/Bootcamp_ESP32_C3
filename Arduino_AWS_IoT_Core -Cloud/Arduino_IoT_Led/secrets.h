@@ -4,9 +4,9 @@
 #define SECRET
 #define THINGNAME "ESP32-#"                         //change this
  
-const char WIFI_SSID[] = "androidSebPro";               //change this
+const char WIFI_SSID[] = "androidSebPro";           //change this
 const char WIFI_PASSWORD[] = "123456789";           //change this
-const char AWS_IOT_ENDPOINT[] = "a2hb1w86de6tcr-ats.iot.ap-southeast-2.amazonaws.com";
+const char AWS_IOT_ENDPOINT[] = "xxxx";		    //change this
 
 //clientID: device-#
 //port:8883     
@@ -15,7 +15,7 @@ const char AWS_IOT_ENDPOINT[] = "a2hb1w86de6tcr-ats.iot.ap-southeast-2.amazonaws
 //"ESP32bootcamp_com"
 //"ESP32bootcamp_control"
  
-// Amazon Root CA 1
+// Amazon Root CA 1						    //change this
 static const char AWS_CERT_CA[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
 
